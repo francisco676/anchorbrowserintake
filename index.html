@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RallyUp — Anchor Browser Content Intake</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --primary: #3D68F5;
+    --accent-1: #7B6BE6;
+    --accent-2: #2DD4A8;
+    --dark: #0F1923;
+    --card: #161F2C;
+    --border: rgba(255,255,255,0.08);
+    --gray: #8896A6;
+    --white: #F1F5F9;
+    --radius: 14px;
+  }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--dark);
+    color: var(--white);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  .header {
+    padding: 32px 24px 0;
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .logo-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; margin-bottom: 20px;
+  }
+  .logo-ru {
+    width: 48px; height: 48px;
+    background: linear-gradient(180deg, var(--primary), var(--accent-1));
+    border-radius: var(--radius);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .logo-ru svg { width: 26px; height: 26px; }
+  .logo-x {
+    font-size: 16px; color: rgba(255,255,255,0.25); font-weight: 500;
+  }
+  .logo-brand {
+    width: 48px; height: 48px;
+    background: white;
+    border-radius: var(--radius);
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 6px;
+    color: #1a1a2e;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+  }
+  .header h1 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+  .header p { color: var(--gray); font-size: 15px; max-width: 480px; margin: 0 auto 8px; }
+  .time-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(45,212,168,0.1); border: 1px solid rgba(45,212,168,0.25);
+    color: #2DD4A8; font-size: 13px; font-weight: 600;
+    padding: 6px 16px; border-radius: 50px; margin-top: 12px;
+  }
+
+  .progress-wrap { max-width: 640px; margin: 28px auto 0; padding: 0 24px; }
+  .progress-bar {
+    height: 4px; background: rgba(255,255,255,0.06);
+    border-radius: 4px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--primary), var(--accent-1));
+    border-radius: 4px; transition: width 0.5s cubic-bezier(0.22,1,0.36,1);
+  }
+  .progress-label {
+    display: flex; justify-content: space-between; margin-top: 8px;
+    font-size: 12px; color: var(--gray); font-weight: 500;
+  }
+
+  .container { max-width: 640px; margin: 0 auto; padding: 24px 24px 120px; }
+
+  .section { display: none; animation: fadeIn 0.4s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--primary); margin-bottom: 8px;
+  }
+  .block-label {
+    display: inline-block;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.2px; color: var(--accent-2);
+    background: rgba(45,212,168,0.08);
+    border: 1px solid rgba(45,212,168,0.2);
+    padding: 4px 10px; border-radius: 50px;
+    margin-bottom: 14px;
+  }
+  .section-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .section-desc { font-size: 14px; color: var(--gray); margin-bottom: 28px; }
+
+  .question { margin-bottom: 28px; }
+  .q-label {
+    font-size: 15px; font-weight: 600; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .q-hint { font-size: 13px; color: var(--gray); margin-bottom: 10px; font-style: italic; }
+
+  textarea, input[type="text"], input[type="email"] {
+    width: 100%; background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; color: var(--white);
+    font-family: inherit; font-size: 15px; resize: vertical;
+    transition: border-color 0.2s; outline: none;
+  }
+  textarea:focus, input[type="text"]:focus, input[type="email"]:focus {
+    border-color: rgba(74,156,245,0.5);
+  }
+  textarea { min-height: 88px; }
+  textarea.tall { min-height: 160px; }
+
+  .radio-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 12px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .radio-row:hover { border-color: rgba(74,156,245,0.4); background: rgba(74,156,245,0.06); }
+  .radio-row.selected {
+    background: rgba(74,156,245,0.10); border-color: var(--primary);
+  }
+  .radio-row input[type="radio"] {
+    margin-top: 4px; accent-color: var(--primary);
+  }
+  .radio-row .rl { font-size: 14px; font-weight: 500; }
+
+  .inline-text { margin-top: 10px; display: none; }
+  .inline-text.show { display: block; }
+
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(15,25,35,0.92); backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border); padding: 16px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    max-width: 640px; margin: 0 auto;
+    z-index: 100;
+  }
+  @media(min-width:641px) {
+    .nav-bar { left: 50%; transform: translateX(-50%); border-radius: 20px 20px 0 0; }
+  }
+  .btn {
+    padding: 12px 28px; border-radius: 12px; font-size: 15px;
+    font-weight: 600; cursor: pointer; border: none;
+    font-family: inherit; transition: all 0.2s;
+  }
+  .btn-ghost { background: transparent; color: var(--gray); }
+  .btn-ghost:hover { color: var(--white); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--accent-1));
+    color: white;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-submit {
+    background: linear-gradient(135deg, #2DD4A8, #1DB88E);
+    color: white;
+  }
+  .btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  .welcome { text-align: center; padding: 40px 0 0; }
+  .welcome h2 { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+  .welcome p { color: var(--gray); font-size: 16px; max-width: 460px; margin: 0 auto 32px; line-height: 1.65; }
+  .welcome-cards {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    text-align: left; margin-bottom: 32px;
+  }
+  .wc {
+    padding: 16px; background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .wc h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .wc p { font-size: 12px; color: var(--gray); margin: 0; }
+
+  .done { text-align: center; padding: 60px 0; }
+  .done .logo-brand {
+    width: 64px; height: 64px; margin-bottom: 20px;
+    border-radius: var(--radius); font-size: 26px;
+  }
+  .done h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .done p { color: var(--gray); font-size: 16px; max-width: 420px; margin: 0 auto; line-height: 1.6; }
+
+  @media(max-width:480px) {
+    .welcome-cards { grid-template-columns: 1fr; }
+    .header h1 { font-size: 22px; }
+    .section-title { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-row">
+    <div class="logo-ru">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+    </div>
+    <span class="logo-x">x</span>
+    <div class="logo-brand">⚓</div>
+  </div>
+  <h1>Executive Content Intake</h1>
+  <p>Voice, audience, and what the engine can't see from posts alone.</p>
+  <div class="time-badge">Takes about 12 minutes</div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label">
+    <span id="sectionLabel">Welcome</span>
+    <span id="progressPct">0%</span>
+  </div>
+</div>
+
+<div class="container" id="app"></div>
+
+<div class="nav-bar">
+  <button class="btn btn-ghost" id="btnBack" onclick="goBack()">Back</button>
+  <button class="btn btn-primary" id="btnNext" onclick="goNext()">Get Started</button>
+</div>
+
+<script>
+  // ============================================================
+  // Session + Apps Script wiring
+  // ============================================================
+  var SESSION_ID = (Date.now().toString(36) + Math.random().toString(36).substr(2, 9));
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPKQwQJzj7U8eCy7X2LcW94UkYTcaZoMhp3b0_V-Kp61RlFM4C0_6Rm_HiZ6q23xrF/exec';
+  var state = {};
+
+  function sendEvent(event, fields) {
+    Object.assign(state, fields || {});
+    state.event = event;
+    state.session_id = SESSION_ID;
+    state.timestamp = new Date().toISOString();
+    try {
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(state),
+        redirect: 'follow'
+      });
+    } catch (e) { /* network noise — swallow */ }
+  }
+
+  // ============================================================
+  // Sections — 10 questions across 3 blocks
+  //   Block A · Voice & Audience    → Q1, Q2, Q3
+  //   Block B · Career Moment       → Q4
+  //   Block C · Filling the Gaps    → Q5–Q10 (sourced from gap-analysis.md)
+  // ============================================================
+  var sections = [
+    // 0: Welcome
+    { id: 'welcome', label: 'Welcome', type: 'welcome', render: function () {
+      return ''
+        + '<div class="welcome">'
+        + '  <h2>Hey Idan</h2>'
+        + '  <p>Your posts and profile already gave us most of your voice. The bits posts can\'t reach: who you want reading, how you want to be framed, and the moments still locked in your head. Answer fast. First draft, no edits.</p>'
+        + '  <div class="welcome-cards">'
+        + '    <div class="wc"><h4>10 short questions</h4><p>3 blocks: voice, ammo, gaps</p></div>'
+        + '    <div class="wc"><h4>About 12 minutes</h4><p>Coffee-length</p></div>'
+        + '    <div class="wc"><h4>No wrong answers</h4><p>First instinct wins</p></div>'
+        + '    <div class="wc"><h4>Stays between us</h4><p>Only your content team sees it</p></div>'
+        + '  </div>'
+        + '</div>';
+    }},
+
+    // ─── BLOCK A · Voice & Audience ───────────────────────────────
+
+    // 1: Q1 — Who do you want to reach? (open)
+    { id: 'q1', label: 'Voice & Audience', type: 'question', qNum: 1, qKey: 'q1', render: function () {
+      return ''
+        + '<div class="block-label">Block A · Voice &amp; Audience</div>'
+        + '<div class="section-label">Question 1 of 10</div>'
+        + '<div class="section-title">Who do you want to reach on LinkedIn?</div>'
+        + '<div class="section-desc">Not your TAM — your inner circle. The 50–500 people whose attention would change the trajectory of Anchor this year.</div>'
+        + '<div class="question">'
+        + '  <div class="q-label">Describe them in your own words.</div>'
+        + '  <div class="q-hint">Role, company stage, what they\'re wrestling with right now. Specific wins. "CTOs at $20–100M ARR AI companies whose agents fail in production at 20% the rate they expected" lands; "enterprise tech leaders" doesn\'t.</div>'
+        + '  <textarea class="tall" data-key="q1" placeholder="e.g., CTOs and VPs of Engineering at $20M–$100M+ ARR AI-agent and AI-product companies who are scaling browser-driven workflows and hitting reliability walls in production..."></textarea>'
+        + '</div>';
+    }},
+
+    // 2: Q2 — How do you want them to see YOU? (radio + Other)
+    { id: 'q2', label: 'Voice & Audience', type: 'question', qNum: 2, qKey: 'q2', render: function () {
+      return ''
+        + '<div class="block-label">Block A · Voice &amp; Audience</div>'
+        + '<div class="section-label">Question 2 of 10</div>'
+        + '<div class="section-title">How do you want them to see <em>you</em>?</div>'
+        + '<div class="section-desc">Pick the framing that should win when someone describes you to a peer. We pulled these from your voice fingerprint and your arc. Pick one or write your own.</div>'
+        + '<div class="question">'
+        + '  <div class="q-label">Choose the closest framing.</div>'
+        + '  <div class="radio-group" data-key="q2">'
+        + '    <label class="radio-row"><input type="radio" name="q2" value="The infrastructure founder"><span class="rl"><strong>The infrastructure founder</strong> → engineering precision when announcing what just shipped, almost zero performance, ⚓⚓⚓ as the only flourish</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q2" value="The 8200 operator"><span class="rl"><strong>The 8200 operator</strong> → adversarial-systems thinking applied to enterprise infrastructure, security-native by default</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q2" value="The engineer-turned-CEO"><span class="rl"><strong>The engineer-turned-CEO</strong> → the rare bridge from deep R&amp;D to enterprise GTM, with the engineer\'s voice intact</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q2" value="The anti-hype operator"><span class="rl"><strong>The anti-hype operator</strong> → real production numbers in a category drowning in agent-demo screenshots</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q2" value="Other"><span class="rl"><strong>Other</strong> → write your own framing</span></label>'
+        + '  </div>'
+        + '  <div class="inline-text" data-reveal-for="Other">'
+        + '    <textarea data-key="q2_other" placeholder="How do you want to be seen, in your own words?"></textarea>'
+        + '  </div>'
+        + '</div>';
+    }},
+
+    // 3: Q3 — How do you want them to see ANCHOR? (radio + Other)
+    { id: 'q3', label: 'Voice & Audience', type: 'question', qNum: 3, qKey: 'q3', render: function () {
+      return ''
+        + '<div class="block-label">Block A · Voice &amp; Audience</div>'
+        + '<div class="section-label">Question 3 of 10</div>'
+        + '<div class="section-title">How do you want them to see <em>Anchor</em>?</div>'
+        + '<div class="section-desc">Same exercise for the brand. When a customer (Yutori, Tavily, Sapiom, Composio) pitches you to a peer, what\'s the line you want them to use? Options pulled from your positioning.</div>'
+        + '<div class="question">'
+        + '  <div class="q-label">Choose the closest framing.</div>'
+        + '  <div class="radio-group" data-key="q3">'
+        + '    <label class="radio-row"><input type="radio" name="q3" value="The browser infrastructure layer for AI agents"><span class="rl"><strong>The browser infrastructure layer for AI agents</strong> → turns any web interface into a reliable automation surface, without brittle scripts or LLM overhead on every action</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q3" value="The reliability layer for enterprise AI"><span class="rl"><strong>The reliability layer for enterprise AI</strong> → what enterprise CTOs actually need to scale agents in production (23x less error-prone, SOC 2, HIPAA)</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q3" value="The verification paradigm"><span class="rl"><strong>The verification paradigm</strong> → the new approach (with Cloudflare) where good bots get verified and trusted, not blocked. The category shift Anchor is naming.</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q3" value="The deterministic execution engine"><span class="rl"><strong>The deterministic execution engine</strong> → b0.dev\'s "plan once, execute many" thesis. 24x faster, 80x cheaper than pure LLM-driven agents.</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q3" value="Other"><span class="rl"><strong>Other</strong> → write your own framing</span></label>'
+        + '  </div>'
+        + '  <div class="inline-text" data-reveal-for="Other">'
+        + '    <textarea data-key="q3_other" placeholder="How do you want Anchor to be seen, in your own words?"></textarea>'
+        + '  </div>'
+        + '</div>';
+    }},
+
+    // ─── BLOCK B · Career Moment ──────────────────────────────────
+
+    // 4: Q4 — Most significant career moment (open, tall)
+    { id: 'q4', label: 'Career Moment', type: 'question', qNum: 4, qKey: 'q4', render: function () {
+      return ''
+        + '<div class="block-label">Block B · Career Moment</div>'
+        + '<div class="section-label">Question 4 of 10</div>'
+        + '<div class="section-title">What\'s the most significant moment in your career that made you who you are today?</div>'
+        + '<div class="section-desc">This is the one we\'ll mine for years. Go for emotional and personal over polished. Tell it the way you\'d tell a close friend, not a journalist. We want the room, the conversation, what it actually cost.</div>'
+        + '<div class="question">'
+        + '  <div class="q-label">Tell the story.</div>'
+        + '  <div class="q-hint">Useful prompts if you\'re stuck: what you were doing right before, who else was there, what you almost did instead, what it cost. IAF Pilots, 8200, the BlinkOps R&amp;D-to-GTM crossover, the moment you decided to leave to start Anchor, a failure that still stings. Anything that genuinely formed you.</div>'
+        + '  <textarea class="tall" data-key="q4" placeholder="Start anywhere. Don\'t edit while writing. First pass. Get it out."></textarea>'
+        + '</div>';
+    }},
+
+    // ─── BLOCK C · Filling the Gaps ───────────────────────────────
+
+    // 5: Q5 — Why leave BlinkOps in fall 2024? (open)
+    { id: 'q5', label: 'Filling the Gaps', type: 'question', qNum: 5, qKey: 'q5', render: function () {
+      return ''
+        + '<div class="block-label">Block C · Filling the Gaps</div>'
+        + '<div class="section-label">Question 5 of 10</div>'
+        + '<div class="section-title">What made you leave BlinkOps in fall 2024 to start Anchor?</div>'
+        + '<div class="section-desc">The founding moment is missing from your public corpus entirely (16 posts, zero origin posts). One answer here unlocks the why-now narrative for Anchor.</div>'
+        + '<div class="question">'
+        + '  <div class="q-label">Was there a specific moment? A demo, a customer conversation, a product failure that crystallized it?</div>'
+        + '  <div class="q-hint">Names + specifics welcome. What were you doing the day you knew you were going to leave?</div>'
+        + '  <textarea data-key="q5" placeholder="e.g., I was on a call with [customer] and they were trying to..."></textarea>'
+        + '</div>';
+    }},
+
+    // 6: Q6 — IAF Pilots Course (open, sensitive)
+    { id: 'q6', label: 'Filling the Gaps', type: 'question', qNum: 6, qKey: 'q6', render: function () {
+      return ''
+        + '<div class="block-label">Block C · Filling the Gaps</div>'
+        + '<div class="section-label">Question 6 of 10</div>'
+        + '<div class="section-title">The IAF Pilots Course chapter</div>'
+        + '<div class="section-desc">One of the most selective military programs in the world is on your profile but absent from every post. We don\'t use it without your green light — but we want to understand what happened, what you took from it, and how you\'d want to frame it (or whether you\'d rather we leave it off-record).</div>'
+        + '<div class="question">'
+        + '  <div class="q-label">Walk us through it. Complete the course? Leave partway through? What did the experience teach you that shows up in how you build today?</div>'
+        + '  <div class="q-hint">Skip if you\'d rather not write it here — that\'s a fine answer too. We\'ll respect whatever line you draw.</div>'
+        + '  <textarea class="tall" data-key="q6" placeholder="The honest version. We can decide later what goes public."></textarea>'
+        + '</div>';
+    }},
+
+    // 7: Q7 — Unit 8200 → Anchor (open)
+    { id: 'q7', label: 'Filling the Gaps', type: 'question', qNum: 7, qKey: 'q7', render: function () {
+      return ''
+        + '<div class="block-label">Block C · Filling the Gaps</div>'
+        + '<div class="section-label">Question 7 of 10</div>'
+        + '<div class="section-title">Unit 8200 → Anchor</div>'
+        + '<div class="section-desc">You, Dor, and Guy all came out of 8200. The adversarial-systems mindset is presumably load-bearing in how Anchor is built — but it\'s never been written publicly.</div>'
+        + '<div class="question">'
+        + '  <div class="q-label">At the level you can describe publicly: what were you building at 8200, and what mindset from that environment shows up directly in how Anchor is built today?</div>'
+        + '  <div class="q-hint">The architecture decisions, the security defaults, the "what could go wrong" instinct — whatever maps cleanly from one to the other.</div>'
+        + '  <textarea data-key="q7" placeholder="The mindset I brought across was..."></textarea>'
+        + '</div>';
+    }},
+
+    // 8: Q8 — Customer story (open)
+    { id: 'q8', label: 'Filling the Gaps', type: 'question', qNum: 8, qKey: 'q8', render: function () {
+      return ''
+        + '<div class="block-label">Block C · Filling the Gaps</div>'
+        + '<div class="section-label">Question 8 of 10</div>'
+        + '<div class="section-title">Pick one customer story we can actually tell</div>'
+        + '<div class="section-desc">Yutori, Tavily, Sapiom, and Composio are already powering production workflows on Anchor, and Cloudflare is the partner. No post describes what any of them actually does with you yet. Customer stories are the highest-trust content for enterprise infra buyers.</div>'
+        + '<div class="question">'
+        + '  <div class="q-label">Pick Yutori, Tavily, Sapiom, or Composio (or another customer you\'d rather feature). What were they trying to automate before Anchor? What broke? What specifically changed?</div>'
+        + '  <div class="q-hint">The actual workflow, the actual failure mode, the actual fix. Not "it was more reliable." Be specific or tell us who at the customer we should talk to ourselves.</div>'
+        + '  <textarea data-key="q8" placeholder="e.g., Yutori was running [workflow] with [previous tool]. The failure was [X]. After Anchor, [Y] changed."></textarea>'
+        + '</div>';
+    }},
+
+    // 9: Q9 — Cloudflare partnership pivot (radio)
+    { id: 'q9', label: 'Filling the Gaps', type: 'question', qNum: 9, qKey: 'q9', render: function () {
+      return ''
+        + '<div class="block-label">Block C · Filling the Gaps</div>'
+        + '<div class="section-label">Question 9 of 10</div>'
+        + '<div class="section-title">The Cloudflare partnership: evasion → verification</div>'
+        + '<div class="section-desc">Anchor\'s framing shifted from "evade detection" to "get verified and trusted" around the Cloudflare partnership. Did you steer that shift, or did Cloudflare?</div>'
+        + '<div class="question">'
+        + '  <div class="q-label">How did the verification-paradigm pivot actually happen?</div>'
+        + '  <div class="radio-group" data-key="q9">'
+        + '    <label class="radio-row"><input type="radio" name="q9" value="Deliberate strategic pivot from our side"><span class="rl"><strong>Deliberate strategic pivot from our side</strong> → we saw the future and led the conversation</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q9" value="Cloudflare approached us"><span class="rl"><strong>Cloudflare approached us</strong> → they were already thinking this way and we were the right partner</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q9" value="Mutual realization, organic"><span class="rl"><strong>Mutual realization, organic</strong> → both sides arrived at the same insight in parallel and it clicked</span></label>'
+        + '    <label class="radio-row"><input type="radio" name="q9" value="Other"><span class="rl"><strong>Other</strong> → there\'s a different version of the story</span></label>'
+        + '  </div>'
+        + '  <div class="inline-text" data-reveal-for="Other">'
+        + '    <textarea data-key="q9_other" placeholder="What actually happened?"></textarea>'
+        + '  </div>'
+        + '  <div class="inline-text" data-reveal-for="Deliberate strategic pivot from our side">'
+        + '    <textarea data-key="q9_other" placeholder="When did you first see it coming? What was the moment?"></textarea>'
+        + '  </div>'
+        + '  <div class="inline-text" data-reveal-for="Cloudflare approached us">'
+        + '    <textarea data-key="q9_other" placeholder="Who reached out, and what did they say in the first conversation?"></textarea>'
+        + '  </div>'
+        + '</div>';
+    }},
+
+    // 10: Q10 — One decision from the last year that was wrong (open)
+    { id: 'q10', label: 'Filling the Gaps', type: 'question', qNum: 10, qKey: 'q10', render: function () {
+      return ''
+        + '<div class="block-label">Block C · Filling the Gaps</div>'
+        + '<div class="section-label">Question 10 of 10</div>'
+        + '<div class="section-title">One bet from the last year that didn\'t pay off</div>'
+        + '<div class="section-desc">Your old-UI reflection post (65 reactions) is the only moment of public product vulnerability in your entire corpus — and it outperformed your thought-leadership average. Posts that show judgment and adaptation compound trust faster than pure momentum posts.</div>'
+        + '<div class="question">'
+        + '  <div class="q-label">What\'s one decision from the last year that turned out to be wrong, and what did you change?</div>'
+        + '  <div class="q-hint">Not a catastrophic failure. Just a positioning bet you walked back, a customer use case that surprised you, a technical assumption that broke at scale.</div>'
+        + '  <textarea data-key="q10" placeholder="The one I still think about is..."></textarea>'
+        + '</div>';
+    }},
+
+    // Submit close-out
+    { id: 'submit', label: 'Submit', type: 'submit', render: function () {
+      return ''
+        + '<div class="section-label">Final step</div>'
+        + '<div class="section-title">Thanks for the time, Idan.</div>'
+        + '<div class="section-desc">That\'s everything we needed. Hit submit and your content team will pick it up from here. We\'re excited to kick things off.</div>';
+    }},
+
+    // Confirmation after submit
+    { id: 'done', label: 'Done', type: 'done', render: function () {
+      return ''
+        + '<div class="done">'
+        + '  <div class="logo-brand">⚓</div>'
+        + '  <h2>All set.</h2>'
+        + '  <p>Your answers landed. Your content team will follow up with first drafts soon.</p>'
+        + '</div>';
+    }}
+  ];
+
+  // ============================================================
+  // Renderer
+  // ============================================================
+  var current = 0;
+  var answers = {};
+  var startedSent = false;
+
+  function render() {
+    var app = document.getElementById('app');
+    app.innerHTML = '<div class="section active">' + sections[current].render() + '</div>';
+
+    // Restore prior answers
+    app.querySelectorAll('[data-key]').forEach(function (el) {
+      var k = el.dataset.key;
+      if (answers[k] === undefined) return;
+      if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+        el.value = answers[k];
+      } else if (el.classList.contains('radio-group')) {
+        var radios = el.querySelectorAll('input[type="radio"]');
+        radios.forEach(function (r) {
+          if (r.value === answers[k]) {
+            r.checked = true;
+            r.closest('.radio-row').classList.add('selected');
+          }
+        });
+      }
+    });
+
+    // Wire radios + reveal (supports multiple reveal blocks per group)
+    app.querySelectorAll('.radio-group').forEach(function (group) {
+      var radios = group.querySelectorAll('input[type="radio"]');
+      var reveals = group.parentElement.querySelectorAll('[data-reveal-for]');
+      radios.forEach(function (r) {
+        r.addEventListener('change', function () {
+          group.querySelectorAll('.radio-row').forEach(function (row) { row.classList.remove('selected'); });
+          r.closest('.radio-row').classList.add('selected');
+          reveals.forEach(function (revealHost) {
+            var trigger = revealHost.dataset.revealFor;
+            if (r.value === trigger) revealHost.classList.add('show');
+            else revealHost.classList.remove('show');
+          });
+          saveAll();
+        });
+      });
+      // Apply reveal on initial render if restoring an answer
+      var checked = group.querySelector('input[type="radio"]:checked');
+      if (checked) {
+        reveals.forEach(function (revealHost) {
+          if (checked.value === revealHost.dataset.revealFor) revealHost.classList.add('show');
+        });
+      }
+    });
+
+    // Wire inputs
+    app.querySelectorAll('textarea, input[type="text"], input[type="email"]').forEach(function (el) {
+      el.addEventListener('input', saveAll);
+    });
+
+    updateUI();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function saveAll() {
+    var app = document.getElementById('app');
+    app.querySelectorAll('[data-key]').forEach(function (el) {
+      var k = el.dataset.key;
+      if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+        answers[k] = el.value;
+      } else if (el.classList.contains('radio-group')) {
+        var checked = el.querySelector('input[type="radio"]:checked');
+        answers[k] = checked ? checked.value : '';
+      }
+    });
+  }
+
+  function updateUI() {
+    var totalSteps = sections.length - 2;
+    var pct;
+    if (current === 0) pct = 0;
+    else if (current >= sections.length - 1) pct = 100;
+    else pct = Math.round((current / totalSteps) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('sectionLabel').textContent = sections[current].label;
+
+    var back = document.getElementById('btnBack');
+    var next = document.getElementById('btnNext');
+    var navBar = document.querySelector('.nav-bar');
+
+    next.style.display = '';
+    back.style.display = '';
+    navBar.style.display = '';
+
+    back.style.visibility = current === 0 ? 'hidden' : 'visible';
+
+    var s = sections[current];
+    if (s.type === 'welcome') {
+      next.textContent = 'Get Started';
+      next.className = 'btn btn-primary';
+    } else if (s.type === 'submit') {
+      next.textContent = 'Submit';
+      next.className = 'btn btn-submit';
+    } else if (s.type === 'done') {
+      navBar.style.display = 'none';
+    } else {
+      next.textContent = 'Continue';
+      next.className = 'btn btn-primary';
+    }
+  }
+
+  function goNext() {
+    saveAll();
+    var s = sections[current];
+
+    if (s.type === 'welcome') {
+      if (!startedSent) {
+        sendEvent('Started', {});
+        startedSent = true;
+      }
+    } else if (s.type === 'question') {
+      var payload = {};
+      payload[s.qKey] = answers[s.qKey] || '';
+      var otherKey = s.qKey + '_other';
+      if (answers[otherKey]) payload[otherKey] = answers[otherKey];
+      sendEvent('Q' + s.qNum + ' answered', payload);
+    } else if (s.type === 'submit') {
+      sendEvent('Submitted', {});
+    }
+
+    if (current < sections.length - 1) {
+      current++;
+      render();
+    }
+  }
+
+  function goBack() {
+    saveAll();
+    if (current > 0) { current--; render(); }
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.metaKey) goNext();
+  });
+
+  render();
+</script>
+</body>
+</html>
